@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Portfolio </title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">KD<span>.</span>me</a>
+  <ul class="nav-links">
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#about">Journey</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-text">
+    <div class="hero-badge">👋 Open to opportunities</div>
+    <h1>Hi, I'm <span class="name">Kalash Date</span><br>Beginner Developer</h1>
+    <p class="hero-sub">
+      I'm just starting my coding journey and loving every step of it!
+      I build simple websites and apps, and I'm always learning something new every day. 🌱
+    </p>
+    <div class="hero-buttons">
+      <a href="#projects" class="btn btn-blue">See My Work 🚀</a>
+      <a href="#contact" class="btn btn-outline">Say Hello 👋</a>
+    </div>
+  </div>
+  <div class="hero-avatar">
+    <div class="avatar-circle">🧑‍💻</div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-inner">
+    <h2 class="section-title reveal">🛠️ My Skills</h2>
+    <p class="section-sub reveal">Technologies I'm currently learning and practicing</p>
+    <div class="skills-grid reveal">
+      <div class="skill-card" data-level="80">
+        <div class="skill-emoji">🌐</div>
+        <div class="skill-name">HTML</div>
+        <div class="skill-bar-wrap"><div class="skill-bar"></div></div>
+      </div>
+      <div class="skill-card" data-level="65">
+        <div class="skill-emoji">🎨</div>
+        <div class="skill-name">CSS</div>
+        <div class="skill-bar-wrap"><div class="skill-bar"></div></div>
+      </div>
+      <div class="skill-card" data-level="50">
+        <div class="skill-emoji">⚡</div>
+        <div class="skill-name">JavaScript</div>
+        <div class="skill-bar-wrap"><div class="skill-bar"></div></div>
+      </div>
+      <!-- <div class="skill-card" data-level="40">
+        <div class="skill-emoji">🐍</div>
+        <div class="skill-name">Python</div>
+        <div class="skill-bar-wrap"><div class="skill-bar"></div></div>
+      </div>-->
+      <div class="skill-card" data-level="35">
+        <div class="skill-emoji">⚛️</div>
+        <div class="skill-name">React</div>
+        <div class="skill-bar-wrap"><div class="skill-bar"></div></div>
+      </div> 
+      <div class="skill-card" data-level="55">
+        <div class="skill-emoji">🐱</div>
+        <div class="skill-name">Git & GitHub</div>
+        <div class="skill-bar-wrap"><div class="skill-bar"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-inner">
+    <h2 class="section-title reveal">💻 My Projects</h2>
+    <p class="section-sub reveal">Small projects I've built while learning — every one taught me something!</p>
+    <div class="projects-grid">
+
+      <div class="project-card reveal">
+        <div class="project-top" style="background:#e8eeff;">🌤️</div>
+        <div class="project-body">
+          <div class="project-title">Weather App</div>
+          <p class="project-desc">A simple weather app that shows current weather for any city using a free API. My first time working with APIs!</p>
+          <div class="project-tags">
+            <span class="ptag">HTML</span>
+            <span class="ptag">CSS</span>
+            <span class="ptag">JavaScript</span>
+          </div>
+          <a href="https://weather-app-six-rho-27.vercel.app/" class="project-link">View →</a>
+        </div>
+      </div>
+
+      <div class="project-card reveal">
+        <div class="project-top" style="background:#fff0f6;">✅</div>
+        <div class="project-body">
+          <div class="project-title">To-Do List</div>
+          <p class="project-desc">A to-do list app with add, complete, and delete features. Helped me understand DOM manipulation and localStorage.</p>
+          <div class="project-tags">
+            <span class="ptag">HTML</span>
+            <span class="ptag">CSS</span>
+            <span class="ptag">JavaScript</span>
+          </div>
+          <a href="https://todotask-app-swart.vercel.app/" class="project-link">View -></a>
+        </div>
+      </div>
+
+     <div class="project-card reveal">
+  <div class="project-top" style="background:#f0fff4;">🛒</div>
+  <div class="project-body">
+
+    <div class="project-title">Ecommerce</div>
+
+    <p class="project-desc">
+      A modern ecommerce website with product listing and cart functionality.
+    </p>
+
+    <div class="project-tags">
+      <span class="ptag">React</span>
+      <span class="ptag">CSS</span>
+      <span class="ptag">JavaScript</span>
+    </div>
+
+    <a href="https://react-firstapp-eta.vercel.app" class="project-link">
+      View →
+    </a>
+
+  </div>
+</div> </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section id="about">
+  <div class="section-inner">
+    <h2 class="section-title reveal">🗺️ My Journey</h2>
+    <p class="section-sub reveal">How I got started with coding</p>
+    <div class="journey reveal">
+      <div class="journey-item">
+        <div class="journey-dot">🌱</div>
+        <div class="journey-date">2023 — Start</div>
+        <div class="journey-title">Discovered Coding</div>
+        <div class="journey-desc">Watched my first tutorial on YouTube and fell in love with how you can build things from scratch with just code!</div>
+      </div>
+      <div class="journey-item">
+        <div class="journey-dot">📖</div>
+        <div class="journey-date">2024</div>
+        <div class="journey-title">Learned HTML & CSS</div>
+        <div class="journey-desc">Completed freeCodeCamp's HTML & CSS curriculum and built my very first webpage. It looked bad but I was SO proud!</div>
+      </div>
+      <div class="journey-item">
+        <div class="journey-dot">⚡</div>
+        <div class="journey-date">2025</div>
+        <div class="journey-title">Started JavaScript</div>
+        <div class="journey-desc">Began learning JavaScript — it was hard at first but now I'm starting to see how powerful it is!</div>
+      </div>
+      <div class="journey-item">
+        <div class="journey-dot">🚀</div>
+        <div class="journey-date">2025 — Now</div>
+        <div class="journey-title">Building Projects</div>
+        <div class="journey-desc">Putting my skills to use by building real projects, pushing code to GitHub, and working towards my first developer role!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-inner">
+    <div class="contact-card reveal">
+      <div class="contact-emoji">💌</div>
+      <div class="contact-title">Let's Connect!</div>
+      <p class="contact-desc">
+        I'm always happy to chat about coding, collaborate on beginner-friendly projects,
+        or just make new developer friends. Don't be shy — reach out! 😊
+      </p>
+      <a href="mailto:kalashdate62@gmail.com" class="contact-email">📧 kalashdate62@gmail.com</a>
+      <div class="socials">
+        <a href="https://github.com/kalash193" class="social-btn">🐱 GitHub</a>
+        <a href="https://www.linkedin.com/in/kalash-date" class="social-btn">💼 LinkedIn</a>
+        <!-- <a href="https://twitter.com/kalash193" class="social-btn">🐦 Twitter</a> -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  Made with <span>♥</span> and lots of ☕ by Kalash Date &nbsp;|&nbsp; 2026
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
