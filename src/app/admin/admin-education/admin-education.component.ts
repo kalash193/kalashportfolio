@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, Education } from '../../services/portfolio.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin-education',
@@ -27,19 +28,19 @@ import { PortfolioService, Education } from '../../services/portfolio.service';
       <div class="row g-2">
         <div class="col-12">
           <label>Degree / Certification</label>
-          <input type="text" [(ngModel)]="edu.degree" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="edu.degree" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-6">
           <label>Institution</label>
-          <input type="text" [(ngModel)]="edu.institution" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="edu.institution" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-3">
           <label>Period</label>
-          <input type="text" [(ngModel)]="edu.period" class="form-ctrl w-100" placeholder="2022 – 2026">
+          <input type="text" [(ngModel)]="edu.period" class="form-ctrl w-100" placeholder="2022 – 2026" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-3">
           <label>Location</label>
-          <input type="text" [(ngModel)]="edu.location" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="edu.location" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
       </div>
     </div>
@@ -62,12 +63,43 @@ import { PortfolioService, Education } from '../../services/portfolio.service';
     .btn-del:hover { background: rgba(255,107,107,0.25); }
   `]
 })
-export class AdminEducationComponent implements OnInit {
+export class AdminEducationComponent implements OnInit, OnDestroy {
   education: Education[] = [];
   saved = false;
+  isDirty = false; // ✅ track user edits
+  private sub!: Subscription;
+
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.education = JSON.parse(JSON.stringify(this.svc.data.education)); }
-  add() { this.education.push({ id: Date.now().toString(), degree: '', institution: '', period: '', location: '' }); }
-  remove(i: number) { this.education.splice(i, 1); }
-  save() { this.svc.updateEducation(this.education); this.saved = true; setTimeout(() => this.saved = false, 3000); }
+
+  ngOnInit() {
+    // ✅ FIX: Use isDirty flag — old bug used array.length check which
+    // would reload from Firestore if user deleted all entries
+    this.sub = this.svc.data$.subscribe(d => {
+      if (!this.isDirty) {
+        this.education = JSON.parse(JSON.stringify(d.education));
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // ✅ FIX: Unsubscribe to prevent memory leaks
+    this.sub?.unsubscribe();
+  }
+
+  add() {
+    this.isDirty = true;
+    this.education.push({ id: Date.now().toString(), degree: '', institution: '', period: '', location: '' });
+  }
+
+  remove(i: number) {
+    this.isDirty = true;
+    this.education.splice(i, 1);
+  }
+
+  save() {
+    this.svc.updateEducation(this.education);
+    this.saved = true;
+    this.isDirty = false; // ✅ allow Firestore to sync back after save
+    setTimeout(() => this.saved = false, 3000);
+  }
 }

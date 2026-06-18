@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService } from '../../services/portfolio.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin-about',
@@ -18,7 +19,7 @@ import { PortfolioService } from '../../services/portfolio.service';
     <div class="alert alert-success py-2 small" *ngIf="saved">✓ Saved!</div>
     <div class="field-group">
       <label>Professional Summary</label>
-      <textarea class="form-ctrl" rows="8" [(ngModel)]="about"></textarea>
+      <textarea class="form-ctrl" rows="8" [(ngModel)]="about" (ngModelChange)="isDirty = true"></textarea>
       <div class="text-muted small mt-1">{{ about.length }} characters</div>
     </div>
   `,
@@ -30,10 +31,32 @@ import { PortfolioService } from '../../services/portfolio.service';
     .btn-save:hover { opacity: 0.9; color: #fff; }
   `]
 })
-export class AdminAboutComponent implements OnInit {
+export class AdminAboutComponent implements OnInit, OnDestroy {
   about = '';
   saved = false;
+  isDirty = false; // ✅ track user edits
+  private sub!: Subscription;
+
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.about = this.svc.data.about; }
-  save() { this.svc.updateAbout(this.about); this.saved = true; setTimeout(() => this.saved = false, 3000); }
+
+  ngOnInit() {
+    // ✅ FIX: Only sync from Firestore when user hasn't started editing
+    this.sub = this.svc.data$.subscribe(d => {
+      if (!this.isDirty) {
+        this.about = d.about;
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // ✅ FIX: Unsubscribe to prevent memory leaks
+    this.sub?.unsubscribe();
+  }
+
+  save() {
+    this.svc.updateAbout(this.about);
+    this.saved = true;
+    this.isDirty = false; // ✅ allow Firestore to sync back after save
+    setTimeout(() => this.saved = false, 3000);
+  }
 }

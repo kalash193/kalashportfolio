@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, HeroData } from '../../services/portfolio.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin-hero',
@@ -21,7 +22,7 @@ import { PortfolioService, HeroData } from '../../services/portfolio.service';
       </div>
     </div>
     <div class="alert alert-success py-2 small" *ngIf="saved">✓ Hero section saved successfully!</div>
-    <div class="row g-3">
+    <div *ngIf="hero" class="row g-3">
       <div class="col-md-6">
         <div class="field-group">
           <label>Full Name</label>
@@ -67,7 +68,7 @@ import { PortfolioService, HeroData } from '../../services/portfolio.service';
       <div class="col-12">
         <div class="field-group">
           <label>Roles (one per line)</label>
-          <textarea class="form-ctrl" rows="3" [value]="hero.roles.join('\\n')" (input)="onRolesChange($event)"></textarea>
+          <textarea class="form-ctrl" rows="3" [value]="hero.roles.join('\n')" (input)="onRolesChange($event)"></textarea>
         </div>
       </div>
     </div>
@@ -81,12 +82,48 @@ import { PortfolioService, HeroData } from '../../services/portfolio.service';
     .btn-save:hover { opacity: 0.9; color: #fff; }
   `]
 })
-export class AdminHeroComponent implements OnInit {
-  hero!: HeroData;
+export class AdminHeroComponent implements OnInit, OnDestroy {
+  hero: HeroData | null = null;
   saved = false;
+  private sub!: Subscription;
+  private isDirty = false; // ✅ track if user has started editing
+
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.hero = JSON.parse(JSON.stringify(this.svc.data.hero)); }
-  onRolesChange(e: Event) { this.hero.roles = (e.target as HTMLTextAreaElement).value.split('\n').filter(r => r.trim()); }
-  save() { this.svc.updateHero(this.hero); this.saved = true; setTimeout(() => this.saved = false, 3000); }
-  reset() { this.hero = JSON.parse(JSON.stringify(this.svc.data.hero)); }
+
+  ngOnInit() {
+    // ✅ FIX: Only load from Firestore if user hasn't started editing
+    // Uses isDirty flag instead of checking if hero exists
+    this.sub = this.svc.data$.subscribe(d => {
+      if (!this.isDirty) {
+        this.hero = JSON.parse(JSON.stringify(d.hero));
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // ✅ FIX: Always unsubscribe to prevent memory leaks
+    this.sub?.unsubscribe();
+  }
+
+  onRolesChange(e: Event) {
+    if (this.hero) {
+      this.isDirty = true;
+      this.hero.roles = (e.target as HTMLTextAreaElement).value.split('\n').filter(r => r.trim());
+    }
+  }
+
+  onInput() { this.isDirty = true; }
+
+  save() {
+    if (!this.hero) return;
+    this.svc.updateHero(this.hero);
+    this.saved = true;
+    this.isDirty = false; // ✅ after save, allow Firestore to sync back
+    setTimeout(() => this.saved = false, 3000);
+  }
+
+  reset() {
+    this.isDirty = false;
+    this.hero = JSON.parse(JSON.stringify(this.svc.data.hero));
+  }
 }

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PortfolioService, Experience } from '../../services/portfolio.service';
 
@@ -54,8 +55,13 @@ import { PortfolioService, Experience } from '../../services/portfolio.service';
     .exp-bullets li { color: rgba(255,255,255,0.65); font-size: 0.9rem; line-height: 1.7; margin-bottom: 0.4rem; }
   `]
 })
-export class ExperienceComponent implements OnInit {
+export class ExperienceComponent implements OnInit, OnDestroy {
   experience: Experience[] = [];
+  private sub!: Subscription;
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.svc.data$.subscribe(d => this.experience = d.experience); }
+  ngOnInit() {
+    // ✅ FIX: store subscription to unsubscribe on destroy
+    this.sub = this.svc.data$.subscribe(d => this.experience = d.experience);
+  }
+  ngOnDestroy() { this.sub?.unsubscribe(); }
 }

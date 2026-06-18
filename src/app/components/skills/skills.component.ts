@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PortfolioService, Skill } from '../../services/portfolio.service';
 
@@ -42,10 +43,15 @@ import { PortfolioService, Skill } from '../../services/portfolio.service';
     .skill-tag { background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.25); color: #a29bfe; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 500; }
   `]
 })
-export class SkillsComponent implements OnInit {
+export class SkillsComponent implements OnInit, OnDestroy {
   skills: Skill[] = [];
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.svc.data$.subscribe(d => this.skills = d.skills); }
+  private sub!: Subscription;
+  ngOnInit() {
+    // ✅ FIX: store subscription to unsubscribe on destroy
+    this.sub = this.svc.data$.subscribe(d => this.skills = d.skills);
+  }
+  ngOnDestroy() { this.sub?.unsubscribe(); }
 
   getCategoryIcon(cat: string): string {
     const map: Record<string, string> = {

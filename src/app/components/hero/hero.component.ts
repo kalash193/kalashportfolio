@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PortfolioService, HeroData } from '../../services/portfolio.service';
 
@@ -99,8 +100,16 @@ import { PortfolioService, HeroData } from '../../services/portfolio.service';
     @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
   `]
 })
-export class HeroComponent implements OnInit {
+export class HeroComponent implements OnInit, OnDestroy {
   hero!: HeroData;
+  private sub!: Subscription;
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.svc.data$.subscribe(d => this.hero = d.hero); }
+  ngOnInit() {
+    // ✅ FIX: store subscription so we can unsubscribe when component is destroyed
+    this.sub = this.svc.data$.subscribe(d => this.hero = d.hero);
+  }
+  ngOnDestroy() {
+    // ✅ FIX: prevent memory leak — unsubscribe when navigating away
+    this.sub?.unsubscribe();
+  }
 }

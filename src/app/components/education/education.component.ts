@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PortfolioService, Education } from '../../services/portfolio.service';
 
@@ -47,8 +48,13 @@ import { PortfolioService, Education } from '../../services/portfolio.service';
     .edu-period, .edu-loc { color: rgba(255,255,255,0.45); font-size: 0.8rem; }
   `]
 })
-export class EducationComponent implements OnInit {
+export class EducationComponent implements OnInit, OnDestroy {
   education: Education[] = [];
+  private sub!: Subscription;
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.svc.data$.subscribe(d => this.education = d.education); }
+  ngOnInit() {
+    // ✅ FIX: store subscription to unsubscribe on destroy
+    this.sub = this.svc.data$.subscribe(d => this.education = d.education);
+  }
+  ngOnDestroy() { this.sub?.unsubscribe(); }
 }

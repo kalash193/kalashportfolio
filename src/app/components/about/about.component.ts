@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PortfolioService } from '../../services/portfolio.service';
 
@@ -71,8 +72,13 @@ import { PortfolioService } from '../../services/portfolio.service';
     .highlight-item { color: rgba(255,255,255,0.7); margin-bottom: 0.5rem; font-size: 0.9rem; }
   `]
 })
-export class AboutComponent implements OnInit {
+export class AboutComponent implements OnInit, OnDestroy {
   about = '';
+  private sub!: Subscription;
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.svc.data$.subscribe(d => this.about = d.about); }
+  ngOnInit() {
+    // ✅ FIX: store subscription to unsubscribe on destroy
+    this.sub = this.svc.data$.subscribe(d => this.about = d.about);
+  }
+  ngOnDestroy() { this.sub?.unsubscribe(); }
 }

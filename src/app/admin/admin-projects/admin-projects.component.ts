@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, Project } from '../../services/portfolio.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin-projects',
@@ -27,7 +28,7 @@ import { PortfolioService, Project } from '../../services/portfolio.service';
       <div class="row g-2">
         <div class="col-md-8">
           <label>Project Title</label>
-          <input type="text" [(ngModel)]="proj.title" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="proj.title" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-4">
           <label>Tech Stack (comma-separated)</label>
@@ -35,19 +36,19 @@ import { PortfolioService, Project } from '../../services/portfolio.service';
         </div>
         <div class="col-12">
           <label>Short Description</label>
-          <input type="text" [(ngModel)]="proj.description" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="proj.description" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-6">
           <label>GitHub URL</label>
-          <input type="text" [(ngModel)]="proj.github" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="proj.github" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-6">
           <label>Live URL</label>
-          <input type="text" [(ngModel)]="proj.live" class="form-ctrl w-100" placeholder="https://...">
+          <input type="text" [(ngModel)]="proj.live" class="form-ctrl w-100" placeholder="https://..." (ngModelChange)="isDirty = true">
         </div>
         <div class="col-12">
           <label>Bullet Points (one per line)</label>
-          <textarea class="form-ctrl w-100" rows="4" [value]="proj.bullets.join('\\n')" (input)="onBulletsChange($event, proj)"></textarea>
+          <textarea class="form-ctrl w-100" rows="4" [value]="proj.bullets.join('\n')" (input)="onBulletsChange($event, proj)"></textarea>
         </div>
       </div>
     </div>
@@ -70,14 +71,53 @@ import { PortfolioService, Project } from '../../services/portfolio.service';
     .btn-del:hover { background: rgba(255,107,107,0.25); }
   `]
 })
-export class AdminProjectsComponent implements OnInit {
+export class AdminProjectsComponent implements OnInit, OnDestroy {
   projects: Project[] = [];
   saved = false;
+  isDirty = false; // ✅ track user edits
+  private sub!: Subscription;
+
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.projects = JSON.parse(JSON.stringify(this.svc.data.projects)); }
-  onTechChange(e: Event, proj: Project) { proj.tech = (e.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(Boolean); }
-  onBulletsChange(e: Event, proj: Project) { proj.bullets = (e.target as HTMLTextAreaElement).value.split('\n').filter(b => b.trim()); }
-  add() { this.projects.push({ id: Date.now().toString(), title: '', tech: [], description: '', github: '', live: '', bullets: [] }); }
-  remove(i: number) { this.projects.splice(i, 1); }
-  save() { this.svc.updateProjects(this.projects); this.saved = true; setTimeout(() => this.saved = false, 3000); }
+
+  ngOnInit() {
+    // ✅ FIX: Use isDirty flag — old bug used array.length check which
+    // would reload from Firestore if user deleted all projects
+    this.sub = this.svc.data$.subscribe(d => {
+      if (!this.isDirty) {
+        this.projects = JSON.parse(JSON.stringify(d.projects));
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // ✅ FIX: Unsubscribe to prevent memory leaks
+    this.sub?.unsubscribe();
+  }
+
+  onTechChange(e: Event, proj: Project) {
+    this.isDirty = true;
+    proj.tech = (e.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  onBulletsChange(e: Event, proj: Project) {
+    this.isDirty = true;
+    proj.bullets = (e.target as HTMLTextAreaElement).value.split('\n').filter(b => b.trim());
+  }
+
+  add() {
+    this.isDirty = true;
+    this.projects.push({ id: Date.now().toString(), title: '', tech: [], description: '', github: '', live: '', bullets: [] });
+  }
+
+  remove(i: number) {
+    this.isDirty = true;
+    this.projects.splice(i, 1);
+  }
+
+  save() {
+    this.svc.updateProjects(this.projects);
+    this.saved = true;
+    this.isDirty = false; // ✅ allow Firestore to sync back after save
+    setTimeout(() => this.saved = false, 3000);
+  }
 }

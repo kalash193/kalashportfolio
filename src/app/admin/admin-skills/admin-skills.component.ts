@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, Skill } from '../../services/portfolio.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin-skills',
@@ -21,7 +22,7 @@ import { PortfolioService, Skill } from '../../services/portfolio.service';
     <div class="alert alert-success py-2 small" *ngIf="saved">✓ Skills saved!</div>
     <div class="skill-block" *ngFor="let skill of skills; let i = index">
       <div class="skill-block-header d-flex align-items-center gap-2 mb-2">
-        <input type="text" [(ngModel)]="skill.category" class="form-ctrl flex-grow-1" placeholder="Category name">
+        <input type="text" [(ngModel)]="skill.category" class="form-ctrl flex-grow-1" placeholder="Category name" (ngModelChange)="isDirty = true">
         <button class="btn-del" (click)="remove(i)" title="Delete"><i class="bi bi-trash3"></i></button>
       </div>
       <div class="field-group">
@@ -46,13 +47,48 @@ import { PortfolioService, Skill } from '../../services/portfolio.service';
     .stag { background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.25); color: #a29bfe; padding: 0.2rem 0.55rem; border-radius: 5px; font-size: 0.73rem; margin-right: 0.3rem; margin-bottom: 0.3rem; display: inline-block; }
   `]
 })
-export class AdminSkillsComponent implements OnInit {
+export class AdminSkillsComponent implements OnInit, OnDestroy {
   skills: Skill[] = [];
   saved = false;
+  isDirty = false; // ✅ track user edits
+  private sub!: Subscription;
+
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.skills = JSON.parse(JSON.stringify(this.svc.data.skills)); }
-  onItemsChange(e: Event, skill: Skill) { skill.items = (e.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(Boolean); }
-  add() { this.skills.push({ id: Date.now().toString(), category: 'New Category', items: [] }); }
-  remove(i: number) { this.skills.splice(i, 1); }
-  save() { this.svc.updateSkills(this.skills); this.saved = true; setTimeout(() => this.saved = false, 3000); }
+
+  ngOnInit() {
+    // ✅ FIX: Use isDirty flag instead of checking array length
+    // Old bug: if (!this.skills.length) would re-load even after user deleted all items
+    this.sub = this.svc.data$.subscribe(d => {
+      if (!this.isDirty) {
+        this.skills = JSON.parse(JSON.stringify(d.skills));
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // ✅ FIX: Unsubscribe to prevent memory leaks
+    this.sub?.unsubscribe();
+  }
+
+  onItemsChange(e: Event, skill: Skill) {
+    this.isDirty = true;
+    skill.items = (e.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  add() {
+    this.isDirty = true;
+    this.skills.push({ id: Date.now().toString(), category: 'New Category', items: [] });
+  }
+
+  remove(i: number) {
+    this.isDirty = true;
+    this.skills.splice(i, 1);
+  }
+
+  save() {
+    this.svc.updateSkills(this.skills);
+    this.saved = true;
+    this.isDirty = false; // ✅ allow Firestore to sync back after save
+    setTimeout(() => this.saved = false, 3000);
+  }
 }

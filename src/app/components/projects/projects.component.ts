@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PortfolioService, Project } from '../../services/portfolio.service';
 
@@ -55,8 +56,13 @@ import { PortfolioService, Project } from '../../services/portfolio.service';
     .tech-tag { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); color: #00d4ff; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-right: 0.35rem; margin-bottom: 0.35rem; display: inline-block; }
   `]
 })
-export class ProjectsComponent implements OnInit {
+export class ProjectsComponent implements OnInit, OnDestroy {
   projects: Project[] = [];
+  private sub!: Subscription;
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.svc.data$.subscribe(d => this.projects = d.projects); }
+  ngOnInit() {
+    // ✅ FIX: store subscription to unsubscribe on destroy
+    this.sub = this.svc.data$.subscribe(d => this.projects = d.projects);
+  }
+  ngOnDestroy() { this.sub?.unsubscribe(); }
 }

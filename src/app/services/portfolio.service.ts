@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import {
-  doc, getDoc, setDoc, onSnapshot
-} from 'firebase/firestore';
+import { BehaviorSubject, shareReplay } from 'rxjs';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase.config';
 
 export interface HeroData {
@@ -84,23 +82,26 @@ const FIRESTORE_DOC = 'portfolio/data';
 @Injectable({ providedIn: 'root' })
 export class PortfolioService {
   private _data = new BehaviorSubject<PortfolioData>(DEFAULT_DATA);
-  data$ = this._data.asObservable();
+
+  // ✅ FIX 1: shareReplay(1) ensures every new subscriber immediately gets
+  // the latest Firestore value — no stale data, no missed emissions
+  data$ = this._data.asObservable().pipe(shareReplay(1));
+
   loading = new BehaviorSubject<boolean>(true);
+  private seeded = false;
 
   get data(): PortfolioData { return this._data.value; }
 
-  constructor() {
-    this.subscribeToFirestore();
-  }
+  constructor() { this.subscribeToFirestore(); }
 
-  /** Listen to Firestore in real-time. Falls back to DEFAULT_DATA if doc doesn't exist. */
   private subscribeToFirestore() {
     const ref = doc(db, FIRESTORE_DOC);
     onSnapshot(ref, (snap) => {
       if (snap.exists()) {
         this._data.next(snap.data() as PortfolioData);
-      } else {
-        // First run: seed Firestore with default data
+        this.seeded = true;
+      } else if (!this.seeded) {
+        this.seeded = true;
         this.save(DEFAULT_DATA);
       }
       this.loading.next(false);
@@ -110,18 +111,17 @@ export class PortfolioService {
     });
   }
 
-  /** Persist the full portfolio document to Firestore */
   async save(data: PortfolioData): Promise<void> {
     this._data.next(data);
     const ref = doc(db, FIRESTORE_DOC);
     await setDoc(ref, data);
   }
 
-  updateHero(hero: HeroData)               { return this.save({ ...this.data, hero }); }
-  updateAbout(about: string)               { return this.save({ ...this.data, about }); }
-  updateSkills(skills: Skill[])            { return this.save({ ...this.data, skills }); }
+  updateHero(hero: HeroData)                 { return this.save({ ...this.data, hero }); }
+  updateAbout(about: string)                 { return this.save({ ...this.data, about }); }
+  updateSkills(skills: Skill[])              { return this.save({ ...this.data, skills }); }
   updateExperience(experience: Experience[]) { return this.save({ ...this.data, experience }); }
-  updateProjects(projects: Project[])      { return this.save({ ...this.data, projects }); }
-  updateEducation(education: Education[])  { return this.save({ ...this.data, education }); }
-  reset()                                  { return this.save(DEFAULT_DATA); }
+  updateProjects(projects: Project[])        { return this.save({ ...this.data, projects }); }
+  updateEducation(education: Education[])    { return this.save({ ...this.data, education }); }
+  reset()                                    { return this.save(DEFAULT_DATA); }
 }

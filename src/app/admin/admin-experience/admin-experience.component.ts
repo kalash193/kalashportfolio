@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, Experience } from '../../services/portfolio.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin-experience',
@@ -27,23 +28,23 @@ import { PortfolioService, Experience } from '../../services/portfolio.service';
       <div class="row g-2">
         <div class="col-md-6">
           <label>Role / Title</label>
-          <input type="text" [(ngModel)]="exp.role" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="exp.role" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-6">
           <label>Company</label>
-          <input type="text" [(ngModel)]="exp.company" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="exp.company" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-6">
           <label>Period</label>
-          <input type="text" [(ngModel)]="exp.period" class="form-ctrl w-100" placeholder="Jan 2024 – Present">
+          <input type="text" [(ngModel)]="exp.period" class="form-ctrl w-100" placeholder="Jan 2024 – Present" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-md-6">
           <label>Location</label>
-          <input type="text" [(ngModel)]="exp.location" class="form-ctrl w-100">
+          <input type="text" [(ngModel)]="exp.location" class="form-ctrl w-100" (ngModelChange)="isDirty = true">
         </div>
         <div class="col-12">
           <label>Bullet Points (one per line)</label>
-          <textarea class="form-ctrl w-100" rows="5" [value]="exp.bullets.join('\\n')" (input)="onBulletsChange($event, exp)"></textarea>
+          <textarea class="form-ctrl w-100" rows="5" [value]="exp.bullets.join('\n')" (input)="onBulletsChange($event, exp)"></textarea>
         </div>
       </div>
     </div>
@@ -66,13 +67,48 @@ import { PortfolioService, Experience } from '../../services/portfolio.service';
     .btn-del:hover { background: rgba(255,107,107,0.25); }
   `]
 })
-export class AdminExperienceComponent implements OnInit {
+export class AdminExperienceComponent implements OnInit, OnDestroy {
   experience: Experience[] = [];
   saved = false;
+  isDirty = false; // ✅ track user edits
+  private sub!: Subscription;
+
   constructor(private svc: PortfolioService) {}
-  ngOnInit() { this.experience = JSON.parse(JSON.stringify(this.svc.data.experience)); }
-  onBulletsChange(e: Event, exp: Experience) { exp.bullets = (e.target as HTMLTextAreaElement).value.split('\n').filter(b => b.trim()); }
-  add() { this.experience.push({ id: Date.now().toString(), role: '', company: '', period: '', location: '', type: '', bullets: [] }); }
-  remove(i: number) { this.experience.splice(i, 1); }
-  save() { this.svc.updateExperience(this.experience); this.saved = true; setTimeout(() => this.saved = false, 3000); }
+
+  ngOnInit() {
+    // ✅ FIX: Use isDirty flag — old bug used array.length check which
+    // would reload from Firestore if user deleted all entries
+    this.sub = this.svc.data$.subscribe(d => {
+      if (!this.isDirty) {
+        this.experience = JSON.parse(JSON.stringify(d.experience));
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // ✅ FIX: Unsubscribe to prevent memory leaks
+    this.sub?.unsubscribe();
+  }
+
+  onBulletsChange(e: Event, exp: Experience) {
+    this.isDirty = true;
+    exp.bullets = (e.target as HTMLTextAreaElement).value.split('\n').filter(b => b.trim());
+  }
+
+  add() {
+    this.isDirty = true;
+    this.experience.push({ id: Date.now().toString(), role: '', company: '', period: '', location: '', type: '', bullets: [] });
+  }
+
+  remove(i: number) {
+    this.isDirty = true;
+    this.experience.splice(i, 1);
+  }
+
+  save() {
+    this.svc.updateExperience(this.experience);
+    this.saved = true;
+    this.isDirty = false; // ✅ allow Firestore to sync back after save
+    setTimeout(() => this.saved = false, 3000);
+  }
 }
