@@ -39,7 +39,7 @@ import { PortfolioService } from '../../services/portfolio.service';
                 </div>
                 <div class="col-6">
                   <div class="stat-box">
-                    <div class="stat-num">4yr</div>
+                    <div class="stat-num">3yr</div>
                     <div class="stat-label">B.Sc. IT</div>
                   </div>
                 </div>
