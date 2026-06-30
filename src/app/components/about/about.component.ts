@@ -49,7 +49,7 @@ import { PortfolioService } from '../../services/portfolio.service';
           <div class="col-lg-7">
             <p class="about-text">{{ about }}</p>
             <div class="about-highlights mt-4">
-              <div class="highlight-item"><i class="bi bi-check-circle-fill text-primary me-2"></i>Open to relocation to Pune</div>
+              <div class="highlight-item"><i class="bi bi-check-circle-fill text-primary me-2"></i>Open to relocate</div>
               <div class="highlight-item"><i class="bi bi-check-circle-fill text-primary me-2"></i>Available to join immediately</div>
               <div class="highlight-item"><i class="bi bi-check-circle-fill text-primary me-2"></i>Actively building GitHub portfolio</div>
               <div class="highlight-item"><i class="bi bi-check-circle-fill text-primary me-2"></i>Self-learner with online certifications</div>
